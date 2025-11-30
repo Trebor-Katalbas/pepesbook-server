@@ -6,6 +6,11 @@ class UserBase(BaseModel):
     first_name: str
     profile_pic: Optional[str] = None
 
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 class UserCreate(UserBase):
     pass
 

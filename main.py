@@ -18,7 +18,7 @@ app = FastAPI(title="Social Media API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://pepesbook.vercel.app", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -96,6 +96,30 @@ def update_profile_picture(
         db.rollback()
         raise HTTPException(status_code=500, detail="Database error")
 
+@app.put("/users/{user_id}", response_model=schemas.User)
+def update_user(
+    user_id: str,
+    user_data: schemas.UserUpdate,
+    db: Session = Depends(get_db)
+):
+    try:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user_data.first_name is not None:
+            user.first_name = user_data.first_name
+        
+        db.commit()
+        db.refresh(user)
+        
+        return user
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="User update failed")
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Database error")
 
 @app.get("/users/{user_id}", response_model=schemas.User)
 def get_user(user_id: str, db: Session = Depends(get_db)):
